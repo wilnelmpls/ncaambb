@@ -1,0 +1,17 @@
+{
+	"name": "table_defs",
+	"properties": {
+		"content": {
+			"query": "CREATE VIEW dbo.table_defs\nAS\nSELECT t.name as table_name, c.name as column_name\nFROM sys.tables t \nINNER JOIN sys.columns c on t.object_id = c.object_id\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "ncaambb",
+				"poolName": "Built-in"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}
