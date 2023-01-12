@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "61d5d9b7-c150-4343-b43d-f814eee519d5"
+				"spark.autotune.trackingId": "90d17507-e34f-4178-bf3b-bc3f10acc4e0"
 			}
 		},
 		"metadata": {
@@ -196,6 +196,115 @@
 					"ORDER BY Employee"
 				],
 				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Merge statement to handle upsert of dfUpdates into DELTA_Employees table\r\n",
+					"MERGE INTO delta_employees t\r\n",
+					"USING (\r\n",
+					"    SELECT emp.Employee AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Updates AS emp\r\n",
+					"\r\n",
+					"    UNION ALL\r\n",
+					"\r\n",
+					"    SELECT NULL AS MergeKey, emp.*\r\n",
+					"    FROM Employee_Updates AS emp\r\n",
+					"    JOIN delta_employees AS de ON emp.Employee = de.Employee\r\n",
+					"    WHERE de.CurrentRecord = 1 AND emp.Salary <> de.Salary\r\n",
+					") s\r\n",
+					"ON t.Employee = s.MergeKey\r\n",
+					"WHEN MATCHED AND t.CurrentRecord = 1 AND t.Salary <> s.Salary THEN\r\n",
+					"  UPDATE SET t.CurrentRecord = 0, t.EndDate = (CURRENT_DATE)\r\n",
+					"WHEN NOT MATCHED THEN\r\n",
+					"  INSERT (Employee, Salary, BeginDate, EndDate, CurrentRecord) VALUES (s.Employee, s.Salary, CURRENT_DATE, '2999-12-31',1)"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"SELECT *\r\n",
+					"FROM DELTA_Employees\r\n",
+					"ORDER BY Employee"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"-- Retrieve the version/change history of the Delta table\r\n",
+					"DESCRIBE HISTORY default.DELTA_Employees"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\r\n",
+					"df = spark.read.format(\"delta\").option(\"versionAsOf\", 1).load(\"/Delta_Data/Employees/\")\r\n",
+					"df.show()"
+				],
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
