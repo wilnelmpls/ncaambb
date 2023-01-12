@@ -1,0 +1,22 @@
+{
+	"name": "Delta_Data",
+	"properties": {
+		"Name": "Delta_Data",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://covid19jhu@covid19jhu.dfs.core.windows.net/Delta_Data/Employees",
+			"Properties": {
+				"FormatType": "parquet",
+				"LinkedServiceName": "covid19-WorkspaceDefaultStorage"
+			}
+		}
+	},
+	"type": "DATABASE"
+}
